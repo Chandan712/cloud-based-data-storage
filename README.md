@@ -26,17 +26,20 @@ This project is a cloud-based data storage system leveraging AWS services. It in
 ### 1. Create API Gateway
 Go to AWS API Gateway and create a new REST API.
 
-![Creating API Gateway](./screenshots/Screenshot_3.png)
+![Creating API Gateway]![Screenshot (3)](https://github.com/user-attachments/assets/9ae43c76-8b05-49f3-9134-41073b309663)
+
 
 ### 2. Define API Resources
 Create resources and methods in API Gateway for file upload and download.
 
-![Creating Resources](./screenshots/Screenshot_4.png)
+![Creating Resources]![Screenshot (4)](https://github.com/user-attachments/assets/3b3f1945-f1da-4e9b-b661-0e89121308e5)
+
 
 ### 3. Create AWS Lambda Function
 Set up an AWS Lambda function to handle file uploads and downloads.
 
-![Lambda Function Creation](./screenshots/Screenshot_5.png)
+![Lambda Function Creation]![Screenshot (5)](https://github.com/user-attachments/assets/5fca1d6d-262a-4105-ba87-1d8543c79577)
+
 
 ### 4. Configure S3 Bucket
 - Create an S3 bucket.
