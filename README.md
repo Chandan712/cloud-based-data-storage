@@ -1,82 +1,103 @@
-# cloud-based-data-storage
+# Cloud-Based Storage System
 
-# Cloud-Based Data Storage System
-
-## Overview
-This project is a cloud-based data storage system leveraging AWS services. It includes user authentication via AWS Cognito, metadata storage in DynamoDB, IAM-based role-based access control (RBAC), and secured APIs via API Gateway.
-
-## Features
-- User authentication using AWS Cognito
-- Secure file upload/download to S3
-- API Gateway integration for request handling
-- Lambda functions for processing requests
-- DynamoDB for metadata storage
-- IAM-based RBAC for user permissions
+## Project Overview
+This project is a cloud-based storage system using AWS services, including S3, API Gateway, Lambda, Cognito, and DynamoDB. It provides secure file storage, upload, and retrieval functionalities with IAM-based access control.
 
 ## AWS Services Used
-- **Amazon S3** - Storage for user files
-- **Amazon Cognito** - User authentication
-- **AWS Lambda** - Backend logic
-- **Amazon API Gateway** - Secure API endpoints
-- **Amazon DynamoDB** - Metadata storage
-- **AWS IAM** - Role-based access control
+- **S3**: File storage
+- **API Gateway**: Handles API requests
+- **Lambda**: Processes file uploads and retrievals
+- **Cognito**: User authentication
+- **DynamoDB**: Metadata storage
 
 ## Setup Instructions
 
 ### 1. Create API Gateway
-Go to AWS API Gateway and create a new REST API.
-
-![Creating API Gateway]![Screenshot (3)](https://github.com/user-attachments/assets/9ae43c76-8b05-49f3-9134-41073b309663)
-
-
-### 2. Define API Resources
-Create resources and methods in API Gateway for file upload and download.
-
-![Creating Resources]![Screenshot (4)](https://github.com/user-attachments/assets/3b3f1945-f1da-4e9b-b661-0e89121308e5)
+- Navigate to **AWS Console > API Gateway**
+- Click **Create API** and configure as required
+- **Screenshot:**  
+  ![API Gateway Creation]![Screenshot (3)](https://github.com/user-attachments/assets/d7c9ba67-c162-4464-aee2-9cb964a295ca)
 
 
-### 3. Create AWS Lambda Function
-Set up an AWS Lambda function to handle file uploads and downloads.
+### 2. Create API Resources
+- Add `/upload` and `/download` resources
+- **Screenshot:**  
+  ![API Resources]![Screenshot (4)](https://github.com/user-attachments/assets/120a6011-ae6c-41ff-bce4-7ae5ce9124bc)
 
-![Lambda Function Creation]![Screenshot (5)](https://github.com/user-attachments/assets/5fca1d6d-262a-4105-ba87-1d8543c79577)
+
+### 3. Create a Lambda Function
+- Navigate to **AWS Lambda**
+- Create a function and add triggers
+- **Screenshot:**  
+  ![Lambda Function]![Screenshot (5)](https://github.com/user-attachments/assets/ce455543-9495-4530-927f-5ad9ddd6d180)
 
 
-### 4. Configure S3 Bucket
-- Create an S3 bucket.
-- Set appropriate permissions for public or private access.
+### 4. Deploying API Gateway
+- After configuring API Gateway, click **Deploy API**
 
-### 5. Set Up DynamoDB
-- Create a DynamoDB table to store metadata related to file uploads.
+## AWS CLI Commands
+To deploy the Lambda function, run the following commands:
+```sh
+aws lambda create-function \
+    --function-name S3_file_handler \
+    --runtime python3.8 \
+    --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/execution_role \
+    --handler lambda_function.lambda_handler \
+    --zip-file fileb://lambda_function.zip
+```
 
-### 6. Implement IAM Role-Based Access Control
-- Define IAM policies for restricted access based on user roles.
-
-### 7. Deploy and Test
-- Deploy API Gateway.
-- Test API calls using Postman or cURL.
-
-## API Endpoints
-| Method | Endpoint       | Description |
-|--------|---------------|-------------|
-| POST   | /upload       | Upload a file |
-| POST   | /download     | Download a file |
+To update the Lambda function:
+```sh
+aws lambda update-function-code \
+    --function-name S3_file_handler \
+    --zip-file fileb://lambda_function.zip
+```
 
 ## Lambda Function Code
 ```python
 import json
 import boto3
-import os
-
-dynamodb = boto3.resource('dynamodb')
-s3 = boto3.client('s3')
+import base64
 
 def lambda_handler(event, context):
-    # Sample Lambda function to handle API Gateway requests
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Lambda function executed successfully!')
-    }
+    s3 = boto3.client('s3')
+    bucket_name = 'your-s3-bucket-name'
+    
+    if event['httpMethod'] == 'POST':
+        file_content = base64.b64decode(event['body'])
+        file_key = event['queryStringParameters']['filename']
+        s3.put_object(Bucket=bucket_name, Key=file_key, Body=file_content)
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'File uploaded successfully'})
+        }
+    
+    elif event['httpMethod'] == 'GET':
+        file_key = event['queryStringParameters']['filename']
+        file_obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+        file_data = base64.b64encode(file_obj['Body'].read()).decode('utf-8')
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'file_data': file_data})
+        }
+    
+    return {'statusCode': 400, 'body': json.dumps({'message': 'Invalid request'})}
 ```
 
-## Conclusion
-This project provides a secure and scalable cloud-based storage solution using AWS services. You can extend its functionality by adding more features like file versioning, sharing, or real-time notifications.
+## API Endpoints
+- **Upload File**: `POST /upload?filename=<file_name>`
+- **Download File**: `GET /download?filename=<file_name>`
+
+## Console Output
+```
+$ curl -X POST "https://waxiaskfil.execute-api.us-east-1.amazonaws.com/First-stage/Upload" \
+  -H "Content-Type: application/json" \
+  -d '{"file_name": "test.txt", "file_content": "Hello AWS"}'
+
+{"statusCode": 200, "body": "File test.txt uploaded successfully"}
+```
+**Screenshot:**  
+  ![Console Output]![Screenshot (6)](https://github.com/user-attachments/assets/c19fdced-bca1-45d4-ad06-7aca65f3027a)
+
+
+This completes the setup. Now you can use the API Gateway URL to upload and retrieve files securely.
